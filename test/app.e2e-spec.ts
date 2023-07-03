@@ -5,6 +5,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AuthDto } from '../src/auth/dto';
 import { EditUserDto } from 'src/user/dto';
+import { CreateBookmarkDto, EditBookmarkDto } from '../src/bookmark/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
@@ -132,13 +133,66 @@ describe('App e2e', () => {
           .withHeaders({ Authorization: 'Bearer $S{userAt}' })
           .get('/bookmarks')
           .expectStatus(200)
-          .inspect();
+          .expectJsonLength(0);
       });
     });
-    describe('Create bookmark', () => {});
-    describe('Get bookmarks', () => {});
-    describe('Get bookmark by id', () => {});
-    describe('Edit bookmark by id', () => {});
-    describe('Delete bookmark by id', () => {});
+    describe('Create bookmark', () => {
+      const dto: CreateBookmarkDto = {
+        title: 'Task',
+        description: 'Task description',
+        link: 'facebook.com',
+      };
+      it('Should create bookmark', () => {
+        return pactum
+          .spec()
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .post('/bookmarks')
+          .expectStatus(201)
+          .withBody(dto)
+          .stores('bookmarkId', 'id');
+      });
+    });
+    describe('Get bookmarks', () => {
+      it('Should get bookmarks', () => {
+        return pactum
+          .spec()
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .get('/bookmarks')
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+    });
+    describe('Get bookmark by id', () => {
+      it('Should get bookmark by id', () => {
+        return pactum
+          .spec()
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .get('/bookmarks/$S{bookmarkId}')
+          .expectStatus(200);
+      });
+    });
+    describe('Edit bookmark by id', () => {
+      const dto: EditBookmarkDto = {
+        link: 'https://www.youtube.com/watch?v=GHTA143_b-s&list=LL&index=11&t=2964s',
+      };
+      it('Should edit bookmark by id', () => {
+        return pactum
+          .spec()
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .patch('/bookmarks/{id}')
+          .withPathParams('id', '$S{bookmarkId}')
+          .withBody(dto)
+          .expectStatus(200);
+      });
+    });
+    describe('Delete bookmark by id', () => {
+      it('Should delete bookmark by id', () => {
+        return pactum
+          .spec()
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .delete('/bookmarks/$S{bookmarkId}')
+          .expectStatus(204);
+      });
+    });
   });
 });
